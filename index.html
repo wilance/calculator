@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>计算器</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #F5F3EE;
+    --surface: #FFFFFF;
+    --border: #E0DDD6;
+    --text: #1A1917;
+    --muted: #888580;
+    --hint: #B5B2AC;
+    --accent: #2A2826;
+    --result-bg: #F0EDE7;
+    --mono: 'DM Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+  }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+  }
+
+  .page {
+    width: 100%;
+    max-width: 460px;
+  }
+
+  header {
+    margin-bottom: 2.5rem;
+    padding-left: 2px;
+  }
+
+  header h1 {
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.75rem;
+    margin-bottom: 1rem;
+    transition: box-shadow .2s;
+  }
+
+  .card:hover { box-shadow: 0 4px 24px rgba(0,0,0,.06); }
+
+  .step-badge {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: .08em;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 2px 10px;
+    margin-bottom: 1rem;
+  }
+
+  .card-title {
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--muted);
+    margin-bottom: 1.25rem;
+    line-height: 1.5;
+  }
+
+  .input-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 1rem;
+  }
+
+  input[type=number] {
+    flex: 1;
+    height: 44px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0 14px;
+    font-family: var(--mono);
+    font-size: 16px;
+    color: var(--text);
+    background: var(--bg);
+    outline: none;
+    transition: border-color .15s;
+    -moz-appearance: textfield;
+  }
+  input[type=number]::-webkit-inner-spin-button,
+  input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
+  input[type=number]:focus { border-color: var(--accent); }
+  input[type=number]::placeholder { color: var(--hint); }
+
+  .clear-btn {
+    width: 44px;
+    height: 44px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: transparent;
+    color: var(--hint);
+    cursor: pointer;
+    font-size: 18px;
+    display: flex; align-items: center; justify-content: center;
+    transition: color .15s, border-color .15s;
+    flex-shrink: 0;
+  }
+  .clear-btn:hover { color: var(--text); border-color: var(--accent); }
+
+  .triple-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    margin-bottom: 1rem;
+  }
+
+  .result-box {
+    background: var(--result-bg);
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity .25s, transform .25s;
+    pointer-events: none;
+  }
+  .result-box.visible {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  .result-label {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .result-val {
+    font-family: var(--mono);
+    font-size: 26px;
+    font-weight: 500;
+    color: var(--text);
+    letter-spacing: -.01em;
+  }
+
+  .hint {
+    font-size: 11.5px;
+    color: var(--hint);
+    margin-top: .75rem;
+    padding-left: 2px;
+  }
+
+  .clear-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 1rem;
+  }
+
+  .text-btn {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 5px 14px;
+    font-family: var(--sans);
+    font-size: 12px;
+    color: var(--muted);
+    cursor: pointer;
+    transition: color .15s, border-color .15s;
+  }
+  .text-btn:hover { color: var(--text); border-color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <h1>Calculator</h1>
+  </header>
+
+  <div class="card">
+    <span class="step-badge">Step 01</span>
+    <p class="card-title">输入一个数字，计算除以 2 的结果</p>
+    <div class="input-row">
+      <input type="number" id="inp1" placeholder="0" step="any" oninput="calc1()" />
+      <button class="clear-btn" onclick="clear1()" title="清除">×</button>
+    </div>
+    <div class="result-box" id="res1-box">
+      <span class="result-label">÷ 2 =</span>
+      <span class="result-val" id="res1"></span>
+    </div>
+    <p class="hint">支持小数与负数 · 实时计算</p>
+  </div>
+
+  <div class="card">
+    <span class="step-badge">Step 02</span>
+    <p class="card-title">输入三个数字，计算平均值</p>
+    <div class="triple-row">
+      <input type="number" id="a1" placeholder="① " step="any" oninput="calc2()" />
+      <input type="number" id="a2" placeholder="② " step="any" oninput="calc2()" />
+      <input type="number" id="a3" placeholder="③ " step="any" oninput="calc2()" />
+    </div>
+    <div class="clear-row">
+      <button class="text-btn" onclick="clear2()">清除</button>
+    </div>
+    <div class="result-box" id="res2-box">
+      <span class="result-label">平均值 =</span>
+      <span class="result-val" id="res2"></span>
+    </div>
+    <p class="hint">输入后按 Enter 跳到下一格 · 三格填完自动计算</p>
+  </div>
+</div>
+
+<script>
+function fmt(n) {
+  if (!isFinite(n)) return '—';
+  return parseFloat(n.toFixed(10)).toString();
+}
+
+function calc1() {
+  const v = parseFloat(document.getElementById('inp1').value);
+  const box = document.getElementById('res1-box');
+  if (isNaN(v)) { box.classList.remove('visible'); return; }
+  document.getElementById('res1').textContent = fmt(v / 2);
+  box.classList.add('visible');
+}
+
+function clear1() {
+  document.getElementById('inp1').value = '';
+  document.getElementById('res1-box').classList.remove('visible');
+}
+
+function calc2() {
+  const a = parseFloat(document.getElementById('a1').value);
+  const b = parseFloat(document.getElementById('a2').value);
+  const c = parseFloat(document.getElementById('a3').value);
+  const box = document.getElementById('res2-box');
+  if (isNaN(a) || isNaN(b) || isNaN(c)) { box.classList.remove('visible'); return; }
+  document.getElementById('res2').textContent = fmt((a + b + c) / 3);
+  box.classList.add('visible');
+}
+
+function clear2() {
+  ['a1','a2','a3'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('res2-box').classList.remove('visible');
+}
+
+const order = ['a1', 'a2', 'a3'];
+order.forEach((id, i) => {
+  document.getElementById(id).addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const next = order[i + 1];
+      if (next) document.getElementById(next).focus();
+    }
+  });
+});
+</script>
+</body>
+</html>
